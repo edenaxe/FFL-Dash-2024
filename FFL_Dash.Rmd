@@ -68,8 +68,8 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2024 Results") %>%
 
 # Color palette, variables, etc. (set by alphabetical order)
 ffl_pal <- c(
-  "#2C2C2C", "#FFB426", "#4d806e", "#74372F", "#6c53a9", "#9CB2BD",  
-  "#ECE36C", "#F2384D", "#75AC17", "#327FFF", "#504112", "#4C8BA7" 
+  "#cf519e", "#269f99", "#5b413f", "#427464", "#7e04c4", "#99c764",  
+  "#b74527", "#896951", "#327fff", "#b17f39", "#47b8b3", "#e2101e" 
 )
 
 current_wk <- paste("Week", max(parse_number(FFL_Table$Week)))
@@ -301,7 +301,8 @@ ig = lapply(1:nrow(mdf),
                    xref = "paper", yref = "y",
                    xanchor = "center", yanchor = "middle",
                    # Will auto adjust the position of the icon to the right spot
-                   x = ((parse_number(current_wk)+0.35)/(parse_number(current_wk)+1)),
+                   # Week 4 adjusted from +0.35 to +0.3
+                   x = ((parse_number(current_wk)+0.3)/(parse_number(current_wk)+1)),
                    y = mdf[i, ]$Position,
                    sizex = 0.5, sizey = 0.5)
             })
@@ -554,7 +555,7 @@ FFL_Table %>%
 ```
 
 
-```{r margins, echo=FALSE}
+```{r margins, echo=FALSE, include=FALSE}
 
 # A function to retrieve margins for a single team
 get_margins <- function(team_name) {
@@ -590,6 +591,42 @@ get_margins <- function(team_name) {
   
 }
 
+
+###
+
+get_margins("Everybody Hurts")
+
+FFL_Table %>%
+  mutate(Pt_Diff = `Points For` - `Points Against`,
+         Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
+  filter(Team == "Everybody Hurts") %>%
+  group_by(Team) %>%
+  summarize(`Average Absolute Margin` = round(mean(Abs_Pt_Diff), digits = 1)) %>%
+  left_join(
+    FFL_Table %>%
+      mutate(Pt_Diff = `Points For` - `Points Against`,
+             Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
+      filter(Team == "Everybody Hurts",
+             Win == 1) %>%
+      group_by(Team) %>%
+      summarize(`Average Win Margin` = round(mean(Pt_Diff), digits = 1),
+                `Win Count` = as.integer(n())) %>% 
+      left_join(
+        FFL_Table %>%
+          mutate(Pt_Diff = `Points For` - `Points Against`,
+                 Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
+          filter(Team == "Everybody Hurts",
+                 Win == 0) %>%
+          group_by(Team) %>%
+          summarize(`Average Loss Margin` = round(mean(Pt_Diff), digits = 1),
+                    `Loss Count` = as.integer(n())),
+        by = "Team"
+      ), 
+    by = "Team"
+  )
+
+
+###
 
 # margins data frame
 margins_df <- map(
