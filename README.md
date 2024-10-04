@@ -2,7 +2,7 @@
 
 <br>
 
-### Access the live dashboard [here](https://edenaxe.github.io/FFL-Dash-2024/Output/FFL_Dash.html)
+### Access the live dashboard [here](https://edenaxe.github.io/FFL-Dash-24/Output/FFL_Dash.html)
 (Latest Update = Week 4, 10/3/2024)
 
 <br> 
