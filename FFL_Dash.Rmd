@@ -68,8 +68,10 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2024 Results") %>%
 
 # Color palette, variables, etc. (set by alphabetical order)
 ffl_pal <- c(
-  "#cf519e", "#269f99", "#5b413f", "#427464", "#7e04c4", "#99c764",  
-  "#b74527", "#896951", "#327fff", "#b17f39", "#47b8b3", "#e2101e" 
+  "#cf519e", "#269f99", "#327fff", 
+  "#5b413f", "#427464", "#99c764",  
+  "#b74527", "#7e04c4", "#33476a",
+  "#896951", "#47b8b3", "#e2101e" 
 )
 
 current_wk <- paste("Week", max(parse_number(FFL_Table$Week)))
@@ -301,8 +303,7 @@ ig = lapply(1:nrow(mdf),
                    xref = "paper", yref = "y",
                    xanchor = "center", yanchor = "middle",
                    # Will auto adjust the position of the icon to the right spot
-                   # Week 4 adjusted from +0.35 to +0.3
-                   x = ((parse_number(current_wk)+0.3)/(parse_number(current_wk)+1)),
+                   x = ((parse_number(current_wk)+0.34)/(parse_number(current_wk)+1)),
                    y = mdf[i, ]$Position,
                    sizex = 0.5, sizey = 0.5)
             })
@@ -554,8 +555,7 @@ FFL_Table %>%
 
 ```
 
-
-```{r margins, echo=FALSE, include=FALSE}
+```{r margins, echo=FALSE}
 
 # A function to retrieve margins for a single team
 get_margins <- function(team_name) {
@@ -591,43 +591,6 @@ get_margins <- function(team_name) {
   
 }
 
-
-###
-
-get_margins("Everybody Hurts")
-
-FFL_Table %>%
-  mutate(Pt_Diff = `Points For` - `Points Against`,
-         Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-  filter(Team == "Everybody Hurts") %>%
-  group_by(Team) %>%
-  summarize(`Average Absolute Margin` = round(mean(Abs_Pt_Diff), digits = 1)) %>%
-  left_join(
-    FFL_Table %>%
-      mutate(Pt_Diff = `Points For` - `Points Against`,
-             Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-      filter(Team == "Everybody Hurts",
-             Win == 1) %>%
-      group_by(Team) %>%
-      summarize(`Average Win Margin` = round(mean(Pt_Diff), digits = 1),
-                `Win Count` = as.integer(n())) %>% 
-      left_join(
-        FFL_Table %>%
-          mutate(Pt_Diff = `Points For` - `Points Against`,
-                 Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-          filter(Team == "Everybody Hurts",
-                 Win == 0) %>%
-          group_by(Team) %>%
-          summarize(`Average Loss Margin` = round(mean(Pt_Diff), digits = 1),
-                    `Loss Count` = as.integer(n())),
-        by = "Team"
-      ), 
-    by = "Team"
-  )
-
-
-###
-
 # margins data frame
 margins_df <- map(
   .x = unique(Teams),
@@ -651,8 +614,6 @@ margins_long <- margins_df %>%
              `Margin Type` == "Average Loss Margin" ~ Loss_Label,
              TRUE ~ "")) %>%
   select(-Win_Label, -Loss_Label)
-
-
 
 
 # Generate the lollipop plot 
