@@ -3,7 +3,7 @@
 <br>
 
 ### Access the live dashboard [here](https://edenaxe.github.io/FFL-Dash-2024/Output/FFL_Dash.html)
-(Latest Update = Week 6, 10/16/2024)
+(Latest Update = Week 7, 10/23/2024)
 
 <br> 
 
@@ -19,7 +19,7 @@ Currently, the dashboard generates and displays the following visuals:
 - A quadrant chart 
 - A points boxplot chart
 - A schedule what if analysis table
-- A win/loss margin chart
+- A points distribution by week plot
 
 -------------------------------------------
 
