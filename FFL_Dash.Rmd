@@ -530,135 +530,91 @@ WI_df %>%
 
 ```
 
-# Win / Loss Margins
+# Points Distribution
 
 ## Row
 
 ### 
 
-```{r wl table, echo=FALSE, include=FALSE}
+```{r dist plot, echo=FALSE}
+
+dist_plot <- FFL_Table %>%
+  group_by(Week) %>%
+  summarize(`Least Points` = round(min(`Points For`), digits = 1),
+            `Most Points` = round(max(`Points For`), digits = 1),
+            `Average Points` = round(mean(`Points For`), digits = 1)) %>%
+  mutate(Most_Diff = `Most Points`-`Average Points`,
+         Least_Diff = `Least Points`-`Average Points`) %>%
+  ggplot() +
+  # Create a segment for average to high
+  geom_segment(aes(x = Week, xend = Week, 
+                   y = `Average Points`, yend = `Most Points`),
+               size = 6, color = "#b6eb60", alpha = 0.3) +
+  # Create a segment for average to low
+  geom_segment(aes(x = Week, xend = Week, 
+                   y = `Average Points`, yend = `Least Points`),
+               size = 6, color = "#ebae34", alpha = 0.3) +
+  # create a segment to show the average points
+  geom_segment(aes(x = Week, xend = Week, 
+                   y = `Average Points`-.5, yend = `Average Points`+.5),
+               size = 6, color = "black") +
+  # Add the weekly points along each segment and color by icon
+  geom_point(
+    data = FFL_Table %>%
+      mutate(Result = ifelse(Win == 1, "Win", "Loss")), 
+    aes(x = Week, y = `Points For`, color = Team, shape = Result),
+    size = 3.5, alpha = 0.8) +
+  scale_color_manual(values = ffl_pal) +
+  # Flip the plot axes 
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Points Distribution by Week",
+       x = "", y = "Points For")
+
+dist_plot
+
+#ggplotly(dist_plot)
+
+```
+
+```{r dist table, echo=FALSE, include=FALSE}
+# Iterate over all weeks to find distribution of points
+
+PF_dist_wkly <- function(week) {
+  
+  outcome_list <- FFL_Table %>%
+    filter(Week == week) %>%
+    .$`Points For` %>%
+    sort()
+  
+  outcome_list <- tibble(
+    Week = week, 
+    Distribution = list(outcome_list))
+  
+}
+
+PF_dist <- pmap(
+  .l = list(week = unique(FFL_Table$Week)),
+  .f = PF_dist_wkly) %>%
+  bind_rows()
+
 
 # A table for margins by week
 FFL_Table %>%
   mutate(Pt_Diff = `Points For` - `Points Against`,
          Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
   group_by(Week) %>%
-  summarize(`Average Margin` = round(mean(Abs_Pt_Diff), digits = 1),
-            `Median Margin` = round(median(Abs_Pt_Diff), digits = 1),
+  summarize(`Least Points` = round(min(`Points For`), digits = 1),
+            `Most Points` = round(max(`Points For`), digits = 1),
+            `Average Points` = round(mean(`Points For`), digits = 1),
             `Closest Contest` = round(min(Abs_Pt_Diff), digits = 1),
             `Biggest Blowout` = round(max(Abs_Pt_Diff), digits = 1)) %>%
+  left_join(PF_dist, by = "Week") %>%
   gt() %>%
+  gt_plt_dist(Distribution) %>%
   cols_align(
     align = "center",
-    columns = c(2:5)) %>%
+    columns = c(2:7)) %>%
   gt_theme_guardian()
 
 ```
-
-```{r margins, echo=FALSE}
-
-# A function to retrieve margins for a single team
-get_margins <- function(team_name) {
-  
-  FFL_Table %>%
-  mutate(Pt_Diff = `Points For` - `Points Against`,
-         Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-  filter(Team == team_name) %>%
-  group_by(Team) %>%
-  summarize(`Average Absolute Margin` = round(mean(Abs_Pt_Diff), digits = 1)) %>%
-  left_join(
-    FFL_Table %>%
-      mutate(Pt_Diff = `Points For` - `Points Against`,
-             Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-      filter(Team == team_name,
-             Win == 1) %>%
-      group_by(Team) %>%
-      summarize(`Average Win Margin` = round(mean(Pt_Diff), digits = 1),
-                `Win Count` = as.integer(n())) %>% 
-      left_join(
-        FFL_Table %>%
-          mutate(Pt_Diff = `Points For` - `Points Against`,
-                 Abs_Pt_Diff = abs(`Points For` - `Points Against`)) %>%
-          filter(Team == team_name,
-                 Win == 0) %>%
-          group_by(Team) %>%
-          summarize(`Average Loss Margin` = round(mean(Pt_Diff), digits = 1),
-                    `Loss Count` = as.integer(n())),
-        by = "Team"
-      ), 
-    by = "Team"
-  )
-  
-}
-
-# margins data frame
-margins_df <- map(
-  .x = unique(Teams),
-  .f = get_margins) %>%
-  bind_rows() %>%
-  arrange(`Average Absolute Margin`) %>%
-  mutate(Win_Label = paste0(`Average Win Margin`, " (n=", `Win Count`, ")"),
-         Loss_Label = paste0(`Average Loss Margin`, " (n=", `Loss Count`, ")"))
-
-# margins data frame, long version 
-margins_long <- margins_df %>% 
-  select(-`Win Count`, -`Loss Count`) %>%
-  pivot_longer(cols = c(`Average Absolute Margin`, 
-                        `Average Win Margin`, 
-                        `Average Loss Margin`), 
-               names_to = "Margin Type", 
-               values_to = "Margin") %>%
-  mutate(Label = 
-           case_when(
-             `Margin Type` == "Average Win Margin" ~ Win_Label,
-             `Margin Type` == "Average Loss Margin" ~ Loss_Label,
-             TRUE ~ "")) %>%
-  select(-Win_Label, -Loss_Label)
-
-
-# Generate the lollipop plot 
-margins_df %>%
-  mutate(Team = fct_reorder(Team, `Average Absolute Margin`)) %>%
-  ggplot() +
-  geom_segment(aes(x = Team, xend = Team, 
-                   y = 0, yend = `Average Win Margin`,
-                   color = `Average Win Margin`),
-               size = 1.5) +
-  geom_segment(aes(x = Team, xend = Team, 
-                   y = 0, yend = `Average Loss Margin`,
-                   color = `Average Loss Margin`),
-               size = 1.5) +
-  # Add a color gradient from red to green
-  scale_color_gradient2(low = "#d43b20", mid = "#dbcb53", midpoint = 0, high = "#2ac955", guide = "none") + 
-  # Add an intercept at 0 to signify the win/loss transition
-  geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
-  # Add a point for the win margin segment
-  geom_point(
-    data = margins_long %>%
-      filter(`Margin Type` == "Average Win Margin"),
-    aes(x = Team, y = Margin),
-    color = "#235e2e", size = 2) +
-  # Add a point for the loss margin segment
-  geom_point(
-    data = margins_long %>%
-      filter(`Margin Type` == "Average Loss Margin"),
-    aes(x = Team, y = Margin),
-    color = "#941820", size = 2) +
-  # Add a margin label to the end of each point
-  geom_text(
-    data = margins_long %>%
-      filter(`Margin Type` != "Average Absolute Margin"),
-    aes(x = Team, y = Margin, label = Label),
-    size = 1.5,
-    vjust = -1.5,
-    color = ifelse(margins_long %>%
-                     filter(`Margin Type` != "Average Absolute Margin") %>% .$Margin > 0, "#235e2e", "#941820")) +
-  # Flip the plot axes 
-  coord_flip() +
-  theme_minimal() +
-  labs(title = "Average Win / Loss Margin by Team",
-       x = "", y = "Margin",
-       color = "Margin")
-
-```
-
