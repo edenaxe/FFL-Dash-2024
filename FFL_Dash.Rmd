@@ -562,18 +562,31 @@ dist_plot <- FFL_Table %>%
   geom_point(
     data = FFL_Table %>%
       mutate(Result = ifelse(Win == 1, "Win", "Loss")), 
-    aes(x = Week, y = `Points For`, color = Team, shape = Result),
+    aes(x = Week, y = `Points For`, color = Result),
     size = 3.5, alpha = 0.8) +
-  scale_color_manual(values = ffl_pal) +
+  scale_color_manual(values = c("#eb633d", "#0bb83c")) +
   # Flip the plot axes 
   coord_flip() +
   theme_minimal() +
+  theme(legend.position = "bottom", 
+        #legend.text = element_text(size = 8)
+        ) +
   labs(title = "Points Distribution by Week",
        x = "", y = "Points For")
 
 dist_plot
 
 #ggplotly(dist_plot)
+
+
+#  geom_point(
+#    data = FFL_Table %>%
+#      mutate(Result = ifelse(Win == 1, "Win", "Loss")), 
+#    aes(x = Week, y = `Points For`, color = Team, shape = Result),
+#    size = 3.5, alpha = 0.8) +
+#  scale_color_manual(values = ffl_pal) +
+
+
 
 ```
 
