@@ -544,7 +544,8 @@ dist_plot <- FFL_Table %>%
             `Most Points` = round(max(`Points For`), digits = 1),
             `Average Points` = round(mean(`Points For`), digits = 1)) %>%
   mutate(Most_Diff = `Most Points`-`Average Points`,
-         Least_Diff = `Least Points`-`Average Points`) %>%
+         Least_Diff = `Least Points`-`Average Points`,
+         Week = factor(factor(Week, level = paste("Week", 1:16)))) %>%
   ggplot() +
   # Create a segment for average to high
   geom_segment(aes(x = Week, xend = Week, 
