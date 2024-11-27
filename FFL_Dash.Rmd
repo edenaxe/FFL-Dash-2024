@@ -245,7 +245,7 @@ FFL_Table %>%
         height = 25)
     }) %>%
   tab_header(
-    title = "League Standings",
+    title = paste0("League Standings - ", current_wk),
     subtitle = "Beta Hetas and a Worm") %>%
   gt_theme_guardian()
 
@@ -655,6 +655,9 @@ AP_DF %>%
               column_labels.padding.horizontal = px(7)) %>%
   cols_align(align = "center", columns = everything()) %>%
   cols_align(align = "left", columns = "Team") %>%
+  tab_header(
+    title = "All Play Wins",
+    subtitle = "Season Total + Weekly") %>%
   gt_theme_pff()
 
 ```
