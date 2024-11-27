@@ -70,8 +70,8 @@ FFL_Table <- read_excel("FFL_Data.xlsx", sheet = "2024 Results") %>%
 ffl_pal <- c(
   "#cf519e", "#269f99", "#327fff", 
   "#5b413f", "#427464", "#99c764",  
-  "#b74527", "#7e04c4", "#33476a",
-  "#896951", "#47b8b3", "#e2101e" 
+  "#d94429", "#7e04c4", "#33476a",
+  "#896951", "#47b8b3", "#1a23d4" 
 )
 
 current_wk <- paste("Week", max(parse_number(FFL_Table$Week)))
@@ -530,11 +530,11 @@ WI_df %>%
 
 ```
 
-# Points Distribution
+# Extras
 
-## Row
+## Row {.tabset}
 
-### 
+### Points Distribution 
 
 ```{r dist plot, echo=FALSE}
 
@@ -632,3 +632,30 @@ FFL_Table %>%
   gt_theme_guardian()
 
 ```
+
+### All Play Table
+
+```{r all play table}
+
+AP_DF %>%
+  pivot_wider(names_from = Weeks,
+              values_from = Wins) %>%
+  dplyr::rename("Team" = Teams) %>%
+  left_join(AP_Tbl %>% select(Team, `All Play Wins`)) %>%
+  select(Team, `All Play Wins`, everything()) %>%
+  arrange(desc(`All Play Wins`)) %>%
+  gt() %>%
+  data_color(
+    columns = c(`Week 1`:current_wk),
+    colors = scales::col_numeric(
+      palette = c("#eb633d", "#ebae34", "#b6eb60", "#0bb83c"),
+      domain = c(0, 11)),
+    alpha = 0.7) %>%
+  tab_options(column_labels.padding = px(15),
+              column_labels.padding.horizontal = px(7)) %>%
+  cols_align(align = "center", columns = everything()) %>%
+  cols_align(align = "left", columns = "Team") %>%
+  gt_theme_pff()
+
+```
+
